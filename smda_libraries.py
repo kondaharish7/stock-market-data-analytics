@@ -1,6 +1,6 @@
 from datetime import *
 from bs4 import BeautifulSoup
-import sys
+import io,sys
 import requests
 import json
 import pandas as pd
