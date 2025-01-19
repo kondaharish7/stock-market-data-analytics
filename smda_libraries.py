@@ -4,6 +4,7 @@ import io,sys
 import requests
 import json
 import pandas as pd
+import traceback
 
 from smda_AWSOps import *
 
