@@ -2,5 +2,4 @@
 /.venv/
 /.idea/
 /__pycache__/
-/smda_pwds.py
 /sample_files/
