@@ -1,4 +1,0 @@
-
-root_user_access_key='AKIAZBRRENMMWQS7LFFI'
-root_user_sceret_key='kxCs86Do186CoX24zcapOPHqOM5auoIOyYsZSfU0'
-
