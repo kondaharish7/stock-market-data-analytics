@@ -2,7 +2,9 @@ import pandas as pd
 
 from smda_libraries import *
 job_start_time = datetime.now()
-s3_client = aws_client()
+
+aws_session = boto3.Session(profile_name='smda-etl')
+s3_client = get_s3_client(aws_session=aws_session)
 
 def get_html_file(stock_url, stock_name) -> None:
     print(f"Saving html file for {stock_name}, ", end="");log_time = datetime.now()
@@ -14,18 +16,35 @@ def get_html_file(stock_url, stock_name) -> None:
     print(f"elapsed: {datetime.now() - log_time}")
 
 if __name__ == '__main__':
-    all_sectors_s3_key_latest = f"s3://{aws_s3_bucket}/data/all_sectors/latest/all_sectors.csv"
-    df_all_sectors = pd.read_csv(all_sectors_s3_key_latest, storage_options={"key": root_user_access_key, "secret": root_user_sceret_key})
+    all_sectors_s3_key_latest = f"data/all_sectors/latest/all_sectors.csv"
+    s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=all_sectors_s3_key_latest)
+    csv_data = s3_file_resp['Body'].read().decode('utf-8')
+
+    # Create an in-memory buffer and write the CSV data into it
+    sectors_list_io_buffer = io.StringIO(csv_data)
+    df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer,
+                                 sep=',',
+                                 names=['Sector', 'Market_cap(Cr)', 'PE_Ratio', 'Industries', 'Stocks', 'Sector_url'],
+                                 header=1,
+                                 encoding='UTF-8'
+                                 )
+
+    # df_all_sectors = pd.read_csv(all_sectors_s3_key_latest, storage_options={"key": root_user_access_key, "secret": root_user_sceret_key})
     df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == 'Software & IT Services']
 
     # create a dataframe with all the stocks and their url's
-    for index,row in df_all_sectors.iterrows():
-        Sector = row.loc['Sector'].replace(" ","_")
+    for index, row in df_all_sectors.iterrows():
+        Sector = row.loc['Sector'].replace(" ", "_")
         print(Sector)
-        sector_stocks_list_s3_key = f"s3://{aws_s3_bucket}/data/stocks_list/{Sector}_stocks_list.csv"
-        df_stocks_list = pd.read_csv(sector_stocks_list_s3_key, storage_options={"key": root_user_access_key, "secret": root_user_sceret_key})
+
+        sector_stocks_list_s3_key = f"data/stocks_list/{Sector}_stocks_list.csv"
+        s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=sector_stocks_list_s3_key)
+
+        # Create an in-memory buffer and write the CSV data into it
+        sector_stocks_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
+        df_stocks_list = pd.read_csv(filepath_or_buffer=sector_stocks_list_io_buffer, sep=',', names=['Sector', 'industry', 'stock_name', 'url'], header=1, encoding='UTF-8')
         # df_stocks_list = df_stocks_list[df_stocks_list['stock_name'] == 'HDFC Bank']
-        # print(df_stocks_list)
+
         failed_stocks_list = []
         for index, row in df_stocks_list.iterrows():
             try:

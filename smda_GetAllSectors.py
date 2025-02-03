@@ -1,6 +1,9 @@
 from smda_libraries import *
 job_start_time = datetime.now()
 
+aws_session = boto3.Session(profile_name='smda-etl')
+s3_client = get_s3_client(aws_session = aws_session)
+
 base_url = f"https://www.moneycontrol.com/markets/sector-analysis/"
 base_url_response = requests.get(base_url)
 base_url_html_page = BeautifulSoup(base_url_response.text, 'html.parser')
@@ -30,10 +33,22 @@ for a in base_url_html_page.findAll('a', class_="CardWeb_grayBoxStrip__4UAIy"):
 df_sectors = pd.DataFrame(sectors_info_list, columns=['Sector', 'Market_cap(Cr)', 'PE_Ratio', 'Industries', 'Stocks', 'Sector_url'])
 print(df_sectors)
 
-all_sectors_s3_key = f"s3://{aws_s3_bucket}/data/all_sectors/hist/date={job_start_time.date()}/all_sectors_{job_start_time.date()}.csv"
-all_sectors_s3_key_latest = f"s3://{aws_s3_bucket}/data/all_sectors/latest/all_sectors.csv"
+# Create an in-memory buffer and write the CSV data into it
+sectors_info_list_io_buffer = io.StringIO()
+df_sectors.to_csv(sectors_info_list_io_buffer, index=False)
+sectors_info_list_io_buffer.seek(0)
 
-df_sectors.to_csv(all_sectors_s3_key, index=False, storage_options={"key": root_user_access_key, "secret": root_user_sceret_key})
-df_sectors.to_csv(all_sectors_s3_key_latest, index=False, storage_options={"key": root_user_access_key, "secret": root_user_sceret_key})
+# Get the CSV data as bytes
+sectors_info_list_io_buffer_bytes = sectors_info_list_io_buffer.getvalue().encode('utf-8')
+
+# upload the bytes data to S3
+all_sectors_s3_key = f"data/all_sectors/hist/date={job_start_time.date()}/all_sectors_{job_start_time.date()}.csv"
+all_sectors_s3_key_latest = f"data/all_sectors/latest/all_sectors.csv"
+
+s3_client.put_object(Body=sectors_info_list_io_buffer_bytes, Bucket=aws_s3_bucket, Key=all_sectors_s3_key)
+s3_client.put_object(Body=sectors_info_list_io_buffer_bytes, Bucket=aws_s3_bucket, Key=all_sectors_s3_key_latest)
+
+# df_sectors.to_csv(all_sectors_s3_key, index=False, storage_options={"key": root_user_access_key, "secret": root_user_sceret_key})
+# df_sectors.to_csv(all_sectors_s3_key_latest, index=False, storage_options={"key": root_user_access_key, "secret": root_user_sceret_key})
 
 print(f"\n{str('--')*10}\n{job_start_time} | {datetime.now()} | {datetime.now() - job_start_time}")

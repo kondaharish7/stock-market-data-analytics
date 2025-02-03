@@ -1,9 +1,8 @@
-import pandas as pd
-
 from smda_libraries import *
 job_start_time = datetime.now()
 
-s3_client = aws_client()
+aws_session = boto3.Session(profile_name='smda-etl')
+s3_client = get_s3_client(aws_session = aws_session)
 
 def get_stock_ltp(Sector, stock_name, Industry) -> dict:
     stock_html_file_s3_key = f"data/stocks_html_files/{Sector}/{stock_name}.html"
@@ -36,23 +35,35 @@ def save_df_to_s3(stock_ltp_list) -> None:
     # print(df_stocks_ltp.groupby(['Sector']).aggregate({'Industry':'count'}));print()
     # print(df_stocks_ltp.groupby(['Sector','Industry']).aggregate({'stock_name': 'count'}))
 
-    stocks_ltp_s3_key = f"s3://{aws_s3_bucket}/data/stocks_ltp/hist/sector={Sector}/date={job_start_time.date()}/{Sector}_ltps.csv"
-    stocks_ltp_s3_key_latest = f"s3://{aws_s3_bucket}/data/stocks_ltp/latest/sector={Sector}/{Sector}_ltps.csv"
+    # Create an in-memory buffer and write the CSV data into it
+    stocks_ltp_io_buffer = io.StringIO()
+    df_stocks_ltp.to_csv(stocks_ltp_io_buffer, index=False)
+    stocks_ltp_io_buffer.seek(0)
+    stocks_ltp_io_buffer_bytes = stocks_ltp_io_buffer.getvalue().encode('utf-8')
 
-    df_stocks_ltp.to_csv(stocks_ltp_s3_key, index=False, storage_options={"key": root_user_access_key, "secret": root_user_sceret_key})
-    df_stocks_ltp.to_csv(stocks_ltp_s3_key_latest, index=False, storage_options={"key": root_user_access_key, "secret": root_user_sceret_key})
+    stocks_ltp_s3_key = f"data/stocks_ltp/hist/sector={Sector}/date={job_start_time.date()}/{Sector}_ltps.csv"
+    stocks_ltp_s3_key_latest = f"data/stocks_ltp/latest/sector={Sector}/{Sector}_ltps.csv"
+
+    s3_client.put_object(Body=stocks_ltp_io_buffer_bytes, Bucket=aws_s3_bucket, Key=stocks_ltp_s3_key)
+    s3_client.put_object(Body=stocks_ltp_io_buffer_bytes, Bucket=aws_s3_bucket, Key=stocks_ltp_s3_key_latest)
     print(f"elapsed, {datetime.now() - log_time}")
 
 if __name__ == '__main__':
-    all_sectors_s3_key_latest = f"s3://{aws_s3_bucket}/data/all_sectors/latest/all_sectors.csv"
-    df_all_sectors = pd.read_csv(all_sectors_s3_key_latest, storage_options={"key": root_user_access_key, "secret": root_user_sceret_key})
-    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == 'FMCG']
+    all_sectors_s3_key_latest = f"data/all_sectors/latest/all_sectors.csv"
+    s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=all_sectors_s3_key_latest)
+
+    # Create an in-memory buffer and write the CSV data into it
+    sectors_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
+    df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer, sep=',', names=['Sector', 'Market_cap(Cr)', 'PE_Ratio', 'Industries', 'Stocks', 'Sector_url'], header=1, encoding='UTF-8')
+    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == 'Software & IT Services']
 
     stock_ltp_list = []; failed_stocks_list = []
     for index,row in df_all_sectors.iterrows():
         Sector = row.loc['Sector'].replace(" ","_")
-        sector_stocks_list_s3_key = f"s3://{aws_s3_bucket}/data/stocks_list/{Sector}_stocks_list.csv"
-        df_stocks_list = pd.read_csv(sector_stocks_list_s3_key, storage_options={"key": root_user_access_key, "secret": root_user_sceret_key})
+        sector_stocks_list_s3_key = f"data/stocks_list/{Sector}_stocks_list.csv"
+        s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=sector_stocks_list_s3_key)
+        sector_stocks_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
+        df_stocks_list = pd.read_csv(filepath_or_buffer=sector_stocks_list_io_buffer, sep=',', names=['Sector', 'industry', 'stock_name', 'url'], header=1, encoding='UTF-8')
         # df_stocks_list = df_stocks_list[df_stocks_list['stock_name'] == 'Axis Bank']
         for index, row in df_stocks_list.iterrows():
             try:
@@ -74,3 +85,12 @@ if __name__ == '__main__':
 
     print(f"\n{str('--')*10}\n{job_start_time} | {datetime.now()} | {datetime.now() - job_start_time}")
 
+
+"""
+Convert the Dataframe to csv and save it to S3 
+stocks_ltp_s3_key = f"s3://{aws_s3_bucket}/data/stocks_ltp/hist/sector={Sector}/date={job_start_time.date()}/{Sector}_ltps.csv"
+stocks_ltp_s3_key_latest = f"s3://{aws_s3_bucket}/data/stocks_ltp/latest/sector={Sector}/{Sector}_ltps.csv"
+
+df_stocks_ltp.to_csv(stocks_ltp_s3_key, index=False, storage_options={"key": root_user_access_key, "secret": root_user_sceret_key})
+df_stocks_ltp.to_csv(stocks_ltp_s3_key_latest, index=False, storage_options={"key": root_user_access_key, "secret": root_user_sceret_key})
+"""
