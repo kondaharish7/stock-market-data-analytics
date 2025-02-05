@@ -1,8 +1,8 @@
 from smda_libraries import *
 job_start_time = datetime.now()
 
-aws_session = boto3.Session(profile_name='smda-etl')
-s3_client = get_s3_client(aws_session = aws_session)
+# aws_session = boto3.Session(profile_name='smda-etl')
+s3_client = get_s3_client()
 
 base_url = f"https://www.moneycontrol.com/markets/sector-analysis/"
 base_url_response = requests.get(base_url)
