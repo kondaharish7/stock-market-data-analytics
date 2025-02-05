@@ -14,7 +14,7 @@ sectors_info_list = []
 for a in base_url_html_page.findAll('a', class_="CardWeb_grayBoxStrip__4UAIy"):
     try:
         sector_url = f"{a['href']}"
-        sector = f"{a.find('span', class_="CardWeb_sectors_name__bryNo").text}"
+        sector = f"{a.find("span", class_="CardWeb_sectors_name__bryNo").text}"
         market_cap = f"{a.find('span', class_="CardWeb_value__NLX7e CardWeb_font14____K3u").text}"
         PE_Ratio = f"{a.find('span', class_="CardWeb_value__NLX7e CardWeb_mt5__d9MW6 CardWeb_font14____K3u").text}"
 
