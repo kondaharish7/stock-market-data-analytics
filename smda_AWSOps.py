@@ -1,15 +1,23 @@
 import boto3
 
-def get_s3_client(aws_session):
+def get_s3_client():
     try:
+        aws_session = boto3.Session()
         s3_client = aws_session.client('s3')
         print("Authenticated S3 service")
         return s3_client
     except Exception as auth_err:
-        print(auth_err)
-        print("Authenticating with Keys")
-        s3_client = aws_session.client('s3', aws_access_key_id = access_key, aws_secret_access_key = secret_key)
-        return s3_client
+        try
+            print("Authenticating with Profile")
+            aws_session = boto3.Session(profile_name='smda-etl')
+            s3_client = aws_session.client('s3')
+            print("Authenticated S3 service")
+            return s3_client
+        except Exception as auth_err1:
+            print(auth_err1)
+            print("Authenticating with Keys")
+            s3_client = aws_session.client('s3', aws_access_key_id = access_key, aws_secret_access_key = secret_key)
+            return s3_client
 
 def get_glue_client(aws_session):
     try:
