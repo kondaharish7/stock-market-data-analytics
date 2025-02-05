@@ -1,6 +1,4 @@
 import boto3
-from smda_contexts import *
-from smda_libraries import *
 
 def get_s3_client(aws_session):
     try:
