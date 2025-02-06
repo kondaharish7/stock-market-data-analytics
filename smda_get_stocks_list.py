@@ -1,5 +1,3 @@
-import pandas as pd
-
 from smda_libraries import *
 job_start_time = datetime.now()
 
