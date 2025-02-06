@@ -25,10 +25,10 @@ def get_glue_client():
         aws_session = boto3.Session(profile_name='smda-etl')
         glue_client = aws_session.client('glue')
         print("Authenticated Glue service using Profile")
-        return s3glue_client_client
+        return glue_client
     except Exception as auth_err:
         try:
-            print("Authenticating with Profile")
+            print("Authenticating Glue with Credentials")
             aws_session = boto3.Session()
             glue_client = aws_session.client('glue')
             print("Authenticated Glue service")

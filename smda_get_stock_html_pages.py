@@ -3,6 +3,10 @@ job_start_time = datetime.now()
 
 s3_client = get_s3_client()
 
+from awsglue.utils import getResolvedOptions
+args = getResolvedOptions(sys.argv, ['Sector'])
+Sector = args['Sector']
+
 def get_html_file(stock_url, stock_name) -> None:
     print(f"Saving html file for {stock_name}, ", end="");log_time = datetime.now()
     stock_url_response = requests.get(stock_url, timeout=2)
@@ -26,7 +30,8 @@ if __name__ == '__main__':
                                  encoding='UTF-8'
                                  )
 
-    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == 'Banks']
+    # df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == 'Banks']
+    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == Sector]
 
     # create a dataframe with all the stocks and their url's
     for index, row in df_all_sectors.iterrows():
