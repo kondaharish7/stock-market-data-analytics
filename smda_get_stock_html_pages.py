@@ -4,6 +4,7 @@ job_start_time = datetime.now()
 s3_client = get_s3_client()
 
 def get_html_file(stock_url, stock_name) -> None:
+     stock_name = stock_name.replace(" ", "_")
     print(f"Saving html file for {stock_name}, ", end="");log_time = datetime.now()
     stock_url_response = requests.get(stock_url, timeout=2)
     stock_url_html_page = BeautifulSoup(stock_url_response.text, 'html.parser')
