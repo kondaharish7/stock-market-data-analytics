@@ -13,7 +13,7 @@ sectors_list_io_buffer = io.StringIO(csv_data)
 df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer,
                              sep=',',
                              names=['Sector','Market_cap(Cr)','PE_Ratio','Industries','Stocks','Sector_url'],
-                             header=1,
+                             header=0,
                              encoding='UTF-8'
                              )
 

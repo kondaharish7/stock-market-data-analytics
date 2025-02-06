@@ -26,8 +26,7 @@ if __name__ == '__main__':
                                  encoding='UTF-8'
                                  )
 
-    # df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == 'Banks']
-    print(df_all_sectors)
+    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == 'Banks']
 
     # create a dataframe with all the stocks and their url's
     for index, row in df_all_sectors.iterrows():

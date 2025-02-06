@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
     # Create an in-memory buffer and write the CSV data into it
     sectors_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
-    df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer, sep=',', names=['Sector', 'Market_cap(Cr)', 'PE_Ratio', 'Industries', 'Stocks', 'Sector_url'], header=1, encoding='UTF-8')
+    df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer, sep=',', names=['Sector', 'Market_cap(Cr)', 'PE_Ratio', 'Industries', 'Stocks', 'Sector_url'], header=0, encoding='UTF-8')
     df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == 'Software & IT Services']
 
     stock_ltp_list = []; failed_stocks_list = []
