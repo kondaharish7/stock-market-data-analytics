@@ -1,10 +1,7 @@
-import pandas as pd
-
 from smda_libraries import *
 job_start_time = datetime.now()
 
-aws_session = boto3.Session(profile_name='smda-etl')
-s3_client = get_s3_client(aws_session=aws_session)
+s3_client = get_s3_client()
 
 def get_html_file(stock_url, stock_name) -> None:
     print(f"Saving html file for {stock_name}, ", end="");log_time = datetime.now()
