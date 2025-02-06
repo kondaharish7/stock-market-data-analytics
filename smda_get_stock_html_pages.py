@@ -22,12 +22,12 @@ if __name__ == '__main__':
     df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer,
                                  sep=',',
                                  names=['Sector', 'Market_cap(Cr)', 'PE_Ratio', 'Industries', 'Stocks', 'Sector_url'],
-                                 header=1,
+                                 header=0,
                                  encoding='UTF-8'
                                  )
 
-    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == 'Oil & Gas']
-    # print(df_all_sectors)
+    # df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == 'Banks']
+    print(df_all_sectors)
 
     # create a dataframe with all the stocks and their url's
     for index, row in df_all_sectors.iterrows():
