@@ -51,7 +51,7 @@ for index, row in df_all_sectors.iterrows():
             s3_client.put_object(Body=stocks_list_io_buffer_bytes, Bucket=aws_s3_bucket, Key=stocks_list_file_key)
         else:
             empty_stocks_list.append(row.loc['Sector'])
-            print(f", No data found for the Sector,", end="")
+            print(f", No data found for the Sector,")
     except Exception as stocks_pull_err:
         print(f"failed, elapsed: {datetime.now() - log_time}")
         print(traceback.format_exc())
