@@ -1,8 +1,7 @@
 from smda_libraries import *
 job_start_time = datetime.now()
 
-aws_session = boto3.Session(profile_name='smda-etl')
-s3_client = get_s3_client(aws_session=aws_session)
+s3_client = get_s3_client()
 
 base_url = "https://www.moneycontrol.com/india/stockpricequote/"
 all_sectors_s3_key_latest = f"data/all_sectors/latest/all_sectors.csv"
@@ -47,7 +46,7 @@ for index, row in df_all_sectors.iterrows():
 
             # Get the CSV data as bytes and upload to S3
             stocks_list_io_buffer_bytes = stocks_list_io_buffer.getvalue().encode('utf-8')
-            stocks_list_file_key = f"data/stocks_list/{row.loc['Sector'].replace(" ","_")}_stocks_list.csv"
+            stocks_list_file_key = "data/stocks_list/{}_stocks_list.csv".format(row.loc['Sector'].replace(" ","_"))
             s3_client.put_object(Body=stocks_list_io_buffer_bytes, Bucket=aws_s3_bucket, Key=stocks_list_file_key)
         else:
             empty_stocks_list.append(row.loc['Sector'])
