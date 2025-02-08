@@ -1,6 +1,11 @@
 from smda_libraries import *
 job_start_time = datetime.now()
 
+try:
+    from awsglue.utils import getResolvedOptions
+except:
+    print("Unable to import aws glue libraries")
+
 glue_client = get_glue_client()
 s3_client = get_s3_client()
 
