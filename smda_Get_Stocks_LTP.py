@@ -47,15 +47,15 @@ def save_df_to_s3(stock_ltp_list) -> None:
     stocks_ltp_io_buffer.seek(0)
     stocks_ltp_io_buffer_bytes = stocks_ltp_io_buffer.getvalue().encode('utf-8')
 
-    stocks_ltp_s3_key = f"data/stocks_ltp/hist/sector={Sector}/date={job_start_time.date()}/{Sector}_ltps.csv"
-    stocks_ltp_s3_key_latest = f"data/stocks_ltp/latest/sector={Sector}/{Sector}_ltps.csv"
+    stocks_ltp_s3_key = "data/stocks_ltp/hist/sector={}/date={}/{}_ltps.csv".format(Sector, job_start_time.date(), Sector)
+    stocks_ltp_s3_key_latest = "data/stocks_ltp/latest/sector={}/{}_ltps.csv".format(Sector, Sector)
 
     s3_client.put_object(Body=stocks_ltp_io_buffer_bytes, Bucket=aws_s3_bucket, Key=stocks_ltp_s3_key)
     s3_client.put_object(Body=stocks_ltp_io_buffer_bytes, Bucket=aws_s3_bucket, Key=stocks_ltp_s3_key_latest)
     print(f"elapsed, {datetime.now() - log_time}")
 
 if __name__ == '__main__':
-    all_sectors_s3_key_latest = f"data/all_sectors/latest/all_sectors.csv"
+    all_sectors_s3_key_latest = "data/all_sectors/latest/all_sectors.csv"
     s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=all_sectors_s3_key_latest)
 
     # Create an in-memory buffer and write the CSV data into it
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     stock_ltp_list = []; failed_stocks_list = []
     for index,row in df_all_sectors.iterrows():
         Sector = row.loc['Sector'].replace(" ","_")
-        sector_stocks_list_s3_key = f"data/stocks_list/{Sector}_stocks_list.csv"
+        sector_stocks_list_s3_key = "data/stocks_list/{}_stocks_list.csv".format(Sector)
         s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=sector_stocks_list_s3_key)
         sector_stocks_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
         df_stocks_list = pd.read_csv(filepath_or_buffer=sector_stocks_list_io_buffer, sep=',', names=['Sector', 'industry', 'stock_name', 'url'], header=1, encoding='UTF-8')
