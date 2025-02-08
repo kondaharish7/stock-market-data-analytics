@@ -45,21 +45,21 @@ for line in df_all_sectors['n_series'].unique():
         print(job_runs_dict)
         job_runs_list.append(job_runs_dict)
 
-    # job_runs_list = [{'Sector': 'Software & IT Services', 'JobRunId': 'jr_c62a9a1dcb01b8a9fb6a594abddd801edb9600e4851d875b9cc3a8a4abab2668'}, {'Sector': 'Finance', 'JobRunId': 'jr_635b7954bb77d7808a2af6e584dd1aeeba5475fa95eab4f04776616faf32be5b'}, {'Sector': 'Automobile & Ancillaries', 'JobRunId': 'jr_c04a7c87dd9f38b250cf1555abb6d929417be6c2829f484c6b4f4cf8f9c06926'}]
-    print(job_runs_list)
-    running = True
-    while running:
-        print("------")
-        jobs_running2 = []
-        for i in job_runs_list:
-            get_job_runs_resp = glue_client.get_job_run(JobName='smda-get-stocks-htmls', RunId=i['JobRunId'])
-            # if get_job_runs_resp['JobRun']['JobRunState'] == 'RUNNING':
-            i['Status'] = get_job_runs_resp['JobRun']['JobRunState']
-            jobs_running.append(i); jobs_running2.append(i)
-            df_jobs_running = pd.DataFrame(jobs_running)[['Sector', 'Status']]
-            print(df_jobs_running[df_jobs_running['Status'] == 'RUNNING']);print()
-            print(df_jobs_running[df_jobs_running['Status'] != 'RUNNING'])
-        if len(jobs_running2) > 0:
-            time.sleep(5)
-        else:
-            running = False
+    # # job_runs_list = [{'Sector': 'Software & IT Services', 'JobRunId': 'jr_c62a9a1dcb01b8a9fb6a594abddd801edb9600e4851d875b9cc3a8a4abab2668'}, {'Sector': 'Finance', 'JobRunId': 'jr_635b7954bb77d7808a2af6e584dd1aeeba5475fa95eab4f04776616faf32be5b'}, {'Sector': 'Automobile & Ancillaries', 'JobRunId': 'jr_c04a7c87dd9f38b250cf1555abb6d929417be6c2829f484c6b4f4cf8f9c06926'}]
+    # print(job_runs_list)
+    # running = True
+    # while running:
+    #     print("------")
+    #     jobs_running2 = []
+    #     for i in job_runs_list:
+    #         get_job_runs_resp = glue_client.get_job_run(JobName='smda-get-stocks-htmls', RunId=i['JobRunId'])
+    #         # if get_job_runs_resp['JobRun']['JobRunState'] == 'RUNNING':
+    #         i['Status'] = get_job_runs_resp['JobRun']['JobRunState']
+    #         jobs_running.append(i); jobs_running2.append(i)
+    #         df_jobs_running = pd.DataFrame(jobs_running)[['Sector', 'Status']]
+    #         print(df_jobs_running[df_jobs_running['Status'] == 'RUNNING']);print()
+    #         print(df_jobs_running[df_jobs_running['Status'] != 'RUNNING'])
+    #     if len(jobs_running2) > 0:
+    #         time.sleep(5)
+    #     else:
+    #         running = False

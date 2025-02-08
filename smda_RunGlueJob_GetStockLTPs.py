@@ -45,21 +45,3 @@ for line in df_all_sectors['n_series'].unique():
         job_runs_dict['Sector'] = Sector; job_runs_dict['JobRunId'] = start_glue_job_resp['JobRunId']
         print(job_runs_dict)
         job_runs_list.append(job_runs_dict)
-
-    # job_runs_list = [{'Sector': 'Finance', 'JobRunId': 'jr_55a614a8068eed063463ee06a95ddd3985689cc5a0a3a9a220c8a41c45312ed4'}]
-    # print(job_runs_list)
-    # running = True
-    # while running:
-    #     print("------")
-    #     jobs_running2 = []
-    #     for i in job_runs_list:
-    #         get_job_runs_resp = glue_client.get_job_run(JobName='smda-get-stocks-ltps', RunId=i['JobRunId'])
-    #         i['Status'] = get_job_runs_resp['JobRun']['JobRunState']
-    #         jobs_running2.append(i)
-    #         df_jobs_running = pd.DataFrame(jobs_running2)[['Sector', 'Status']]
-    #         print(df_jobs_running[df_jobs_running['Status'] == 'RUNNING']);print()
-    #         print(df_jobs_running[df_jobs_running['Status'] != 'RUNNING'])
-    #     if len(jobs_running2) > 0:
-    #         time.sleep(5)
-    #     else:
-    #         running = False
