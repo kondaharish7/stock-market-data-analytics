@@ -33,9 +33,11 @@ def save_df_to_s3(stock_ltp_list) -> None:
     print(f"Saving the file for {Sector} to S3")
     df_stocks_ltp = pd.DataFrame(stock_ltp_list)
     df_stocks_ltp['nse_change'] = df_stocks_ltp['nsechange'].str.split("(").str[0]
-    df_stocks_ltp['nse_%change'] = df_stocks_ltp['nsechange'].str.split("(").str[1].str.replace("%)", "")
+    # df_stocks_ltp['nse_%change'] = df_stocks_ltp['nsechange'].str.split("(").str[1].str.replace("%)", "")
+    df_stocks_ltp['nse_%change'] = df_stocks_ltp['nsechange'].str.extract(r'(\d+\.\d+)%').astype(float)
     df_stocks_ltp['bse_change'] = df_stocks_ltp['bsechange'].str.split("(").str[0]
-    df_stocks_ltp['bse_%change'] = df_stocks_ltp['bsechange'].str.split("(").str[1].str.replace("%)", "")
+    # df_stocks_ltp['bse_%change'] = df_stocks_ltp['bsechange'].str.split("(").str[1].str.replace("%)", "")
+    df_stocks_ltp['bse_%change'] = df_stocks_ltp['bsechange'].str.extract(r'(\d+\.\d+)%').astype(float)
     df_stocks_ltp = df_stocks_ltp[['Sector', 'Industry', 'stock_name', 'nsecp', 'nse_change', 'nse_%change', 'bsecp', 'bse_change', 'bse_%change']]
     df_stocks_ltp.columns = ['Sector', 'Industry', 'stock_name', 'nse_ltp', 'nse_change', 'nse_%change', 'bse_ltp', 'bse_change', 'bse_%change']
     # print(df_stocks_ltp.groupby(['Sector']).aggregate({'Industry':'count'}));print()
@@ -61,7 +63,7 @@ if __name__ == '__main__':
     # Create an in-memory buffer and write the CSV data into it
     sectors_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
     df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer, sep=',', names=['Sector', 'Market_cap(Cr)', 'PE_Ratio', 'Industries', 'Stocks', 'Sector_url'], header=0, encoding='UTF-8')
-    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == Sector]
+    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == "Photographic Products"]
 
     stock_ltp_list = []; failed_stocks_list = []
     for index,row in df_all_sectors.iterrows():
