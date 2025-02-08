@@ -17,17 +17,19 @@ df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer,
                              encoding='UTF-8'
                              )
 
+df_all_sectors = df_all_sectors.sort_values(by=['Stocks'], ascending=[True]).reset_index()
+df_all_sectors['n_series'] = df_all_sectors.index // 10 + 1
+# print(df_all_sectors)
+
 # df_all_sectors = df_all_sectors[df_all_sectors['Sector'].isin(['Finance', 'Metals & Mining','Power'])]
 # df_all_sectors = df_all_sectors[df_all_sectors['Sector'].isin(['Telecom', 'Infrastructure'])]
-df_all_sectors = df_all_sectors.sort_values(by=['Stocks'], ascending=[True])
-df_all_sectors = df_all_sectors[df_all_sectors['Stocks'] < 100].reset_index()
-df_all_sectors = df_all_sectors.head(6)
-# print(df_all_sectors)
-df_all_sectors['n_series'] = df_all_sectors.index // 3 + 1
-df_all_sectors = df_all_sectors[df_all_sectors['n_series'].isin([1, 2])]
+# df_all_sectors = df_all_sectors[df_all_sectors['Stocks'] < 100].reset_index()
+# df_all_sectors = df_all_sectors.head(6)
+# df_all_sectors = df_all_sectors[df_all_sectors['n_series'].isin([1, 2])]
+
 print(df_all_sectors[['Sector', 'Stocks', 'n_series']])
 
-
+jobs_running = []
 for line in df_all_sectors['n_series'].unique():
     job_runs_list = []
     df = df_all_sectors[df_all_sectors['n_series'] == line]
@@ -48,14 +50,16 @@ for line in df_all_sectors['n_series'].unique():
     running = True
     while running:
         print("------")
-        jobs_running = []
+        jobs_running2 = []
         for i in job_runs_list:
             get_job_runs_resp = glue_client.get_job_run(JobName='smda-get-stocks-htmls', RunId=i['JobRunId'])
-            if get_job_runs_resp['JobRun']['JobRunState'] == 'RUNNING':
-                i['Status'] = get_job_runs_resp['JobRun']['JobRunState']
-                jobs_running.append(i)
-        if len(jobs_running) > 0:
-            print(pd.DataFrame(jobs_running)[['Sector', 'Status']])
+            # if get_job_runs_resp['JobRun']['JobRunState'] == 'RUNNING':
+            i['Status'] = get_job_runs_resp['JobRun']['JobRunState']
+            jobs_running.append(i); jobs_running2.append(i)
+            df_jobs_running = pd.DataFrame(jobs_running)[['Sector', 'Status']]
+            print(df_jobs_running[df_jobs_running['Status'] == 'RUNNING']);print()
+            print(df_jobs_running[df_jobs_running['Status'] != 'RUNNING'])
+        if len(jobs_running2) > 0:
             time.sleep(5)
         else:
             running = False

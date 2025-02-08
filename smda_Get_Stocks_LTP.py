@@ -1,8 +1,14 @@
 from smda_libraries import *
 job_start_time = datetime.now()
 
-aws_session = boto3.Session(profile_name='smda-etl')
-s3_client = get_s3_client(aws_session = aws_session)
+s3_client = get_s3_client()
+
+try:
+    from awsglue.utils import getResolvedOptions
+    args = getResolvedOptions(sys.argv, ['Sector'])
+    Sector = args['Sector']
+except:
+    print("Unable to import aws glue libraries")
 
 def get_stock_ltp(Sector, stock_name, Industry) -> dict:
     stock_html_file_s3_key = f"data/stocks_html_files/{Sector}/{stock_name}.html"
@@ -55,7 +61,7 @@ if __name__ == '__main__':
     # Create an in-memory buffer and write the CSV data into it
     sectors_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
     df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer, sep=',', names=['Sector', 'Market_cap(Cr)', 'PE_Ratio', 'Industries', 'Stocks', 'Sector_url'], header=0, encoding='UTF-8')
-    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == 'Software & IT Services']
+    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == Sector]
 
     stock_ltp_list = []; failed_stocks_list = []
     for index,row in df_all_sectors.iterrows():
