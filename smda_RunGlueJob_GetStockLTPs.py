@@ -17,7 +17,7 @@ df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer,
                              encoding='UTF-8'
                              )
 
-df_all_sectors = df_all_sectors[df_all_sectors['Sector'].isin(['Photographic Products'])]
+# df_all_sectors = df_all_sectors[df_all_sectors['Sector'].isin(['Photographic Products'])]
 df_all_sectors = df_all_sectors.sort_values(by=['Stocks'], ascending=[True]).reset_index()
 df_all_sectors['n_series'] = df_all_sectors.index // 10 + 1
 # print(df_all_sectors)
