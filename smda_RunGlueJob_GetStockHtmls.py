@@ -35,11 +35,7 @@ for line in df_all_sectors['n_series'].unique():
     df = df_all_sectors[df_all_sectors['n_series'] == line]
     for index, row in df.iterrows():
         Sector = row['Sector']; job_runs_dict = {}
-        start_glue_job_resp = glue_client.start_job_run(JobName='smda-get-stocks-htmls',
-                                                        Arguments={'--Sector': Sector},
-                                                        Timeout=20,
-                                                        MaxCapacity=0.0625,
-                                                        ExecutionClass='STANDARD')
+        start_glue_job_resp = glue_client.start_job_run(JobName='smda-get-stocks-htmls', Arguments={'--Sector': Sector}, Timeout=50, MaxCapacity=0.0625, ExecutionClass='STANDARD')
         # print(f"{Sector} : {start_glue_job_resp['JobRunId']}")
         job_runs_dict['Sector'] = Sector; job_runs_dict['JobRunId'] = start_glue_job_resp['JobRunId']
         print(job_runs_dict)
