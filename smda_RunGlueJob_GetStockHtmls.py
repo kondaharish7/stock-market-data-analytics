@@ -27,20 +27,18 @@ df_all_sectors['n_series'] = df_all_sectors.index // 10 + 1
 # print(df_all_sectors)
 
 # df_all_sectors = df_all_sectors[df_all_sectors['Sector'].isin(['Finance', 'Metals & Mining','Power'])]
-# df_all_sectors = df_all_sectors[df_all_sectors['Sector'].isin(['Telecom', 'Infrastructure'])]
 # df_all_sectors = df_all_sectors[df_all_sectors['Stocks'] < 100].reset_index()
 # df_all_sectors = df_all_sectors.head(6)
 # df_all_sectors = df_all_sectors[df_all_sectors['n_series'].isin([1, 2])]
 
 print(df_all_sectors[['Sector', 'Stocks', 'n_series']])
 
-job_run_args = {'--Sector': Sector}
 jobs_running = []
 for line in df_all_sectors['n_series'].unique():
     job_runs_list = []
     df = df_all_sectors[df_all_sectors['n_series'] == line]
     for index, row in df.iterrows():
-        Sector = row['Sector']; job_runs_dict = {}
+        job_run_args = {'--Sector': row['Sector']}; job_runs_dict = {}
         start_glue_job_resp = glue_client.start_job_run(JobName='smda-get-stocks-htmls',
                                                         Arguments=job_run_args,
                                                         Timeout=50,

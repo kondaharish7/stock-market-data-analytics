@@ -17,7 +17,14 @@ def get_stock_ltp(Sector, stock_name, Industry) -> dict:
     stock_html_page = BeautifulSoup(html_content, 'html.parser')
 
     stock_ltp_dict['Sector'] = Sector; stock_ltp_dict['stock_name'] = stock_name; stock_ltp_dict['Industry'] = Industry
+
+    # get the Stock title
+    for stock_title_tag in stock_html_page.findAll('div', class_="inid_name"):
+        stock_title = stock_title_tag.find('h1').text
+        stock_ltp_dict['stock_name'] = stock_title
+
     for ltp_parent_tag in stock_html_page.findAll('div', class_="inindi_price"):
+
         # get Last traded price (ltp) of the stock
         for stock_ltp_tag in ltp_parent_tag.findAll('div', class_=lambda x: x and "inprice1 " in x):
             if 'nse' in stock_ltp_tag['id'] or 'bse' in stock_ltp_tag['id']:
@@ -27,19 +34,29 @@ def get_stock_ltp(Sector, stock_name, Industry) -> dict:
         for stock_pricechng_tag in ltp_parent_tag.findAll('div', class_=lambda x: x and "pricupdn" in x):
             if 'nsechange' in stock_pricechng_tag['class'] or 'bsechange' in stock_pricechng_tag['class']:
                 stock_ltp_dict[stock_pricechng_tag['class'][1]] = stock_pricechng_tag.text
+
+        # get the last date of ltp
+        for stock_ltpdate_tag in ltp_parent_tag.findAll('p', class_= lambda x: x and "asondate" in x):
+            if 'nseasondate' in stock_ltpdate_tag['class'] or 'bseasondate' in stock_ltpdate_tag['class']:
+                stock_ltp_dict[stock_ltpdate_tag['class'][0]] = stock_ltpdate_tag.text.strip('As on').split("|")[0]
+
     return stock_ltp_dict
 
 def save_df_to_s3(stock_ltp_list) -> None:
     print(f"Saving the file for {Sector} to S3")
     df_stocks_ltp = pd.DataFrame(stock_ltp_list)
     df_stocks_ltp['nse_change'] = df_stocks_ltp['nsechange'].str.split("\(").str[0]
-    df_stocks_ltp['nse_%change'] = df_stocks_ltp['nsechange'].str.extract(r'(\d+\.\d+)%').astype(float)
+    df_stocks_ltp['nse_%change'] = df_stocks_ltp['nsechange'].str.extract(r'\((-?\d+\.\d+)%')
     df_stocks_ltp['bse_change'] = df_stocks_ltp['bsechange'].str.split("\(").str[0]
-    df_stocks_ltp['bse_%change'] = df_stocks_ltp['bsechange'].str.extract(r'(\d+\.\d+)%').astype(float)
-    df_stocks_ltp = df_stocks_ltp[['Sector', 'Industry', 'stock_name', 'nsecp', 'nse_change', 'nse_%change', 'bsecp', 'bse_change', 'bse_%change']]
-    df_stocks_ltp.columns = ['Sector', 'Industry', 'stock_name', 'nse_ltp', 'nse_change', 'nse_%change', 'bse_ltp', 'bse_change', 'bse_%change']
+    df_stocks_ltp['bse_%change'] = df_stocks_ltp['bsechange'].str.extract(r'\((-?\d+\.\d+)%')
+    df_stocks_ltp['bseasondate'] = pd.to_datetime(df_stocks_ltp['bseasondate'].str.strip(), format='%d %b, %Y')
+    df_stocks_ltp['nseasondate'] = pd.to_datetime(df_stocks_ltp['nseasondate'].str.strip(), format='%d %b, %Y')
+    df_stocks_ltp['etl_insert_dt'] = job_start_time.strftime('%Y-%m-%d %H:%M:%S')
+    df_stocks_ltp = df_stocks_ltp[['Sector', 'Industry', 'stock_name', 'nseasondate', 'nsecp', 'nse_change', 'nse_%change', 'bseasondate', 'bsecp', 'bse_change', 'bse_%change', 'etl_insert_dt']]
+    df_stocks_ltp.columns = ['Sector', 'Industry', 'stock_name', 'nse_ltp_date', 'nse_ltp', 'nse_change', 'nse_%change', 'bse_ltp_date', 'bse_ltp', 'bse_change', 'bse_%change', 'etl_insert_dt']
     # print(df_stocks_ltp.groupby(['Sector']).aggregate({'Industry':'count'}));print()
     # print(df_stocks_ltp.groupby(['Sector','Industry']).aggregate({'stock_name': 'count'}))
+    print(df_stocks_ltp)
 
     # Create an in-memory buffer and write the CSV data into it
     stocks_ltp_io_buffer = io.StringIO()
@@ -61,7 +78,7 @@ if __name__ == '__main__':
     # Create an in-memory buffer and write the CSV data into it
     sectors_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
     df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer, sep=',', names=['Sector', 'Market_cap(Cr)', 'PE_Ratio', 'Industries', 'Stocks', 'Sector_url'], header=0, encoding='UTF-8')
-    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == Sector]
+    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == 'Banks']
 
     stock_ltp_list = []; failed_stocks_list = []
     for index,row in df_all_sectors.iterrows():
@@ -70,7 +87,7 @@ if __name__ == '__main__':
         s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=sector_stocks_list_s3_key)
         sector_stocks_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
         df_stocks_list = pd.read_csv(filepath_or_buffer=sector_stocks_list_io_buffer, sep=',', names=['Sector', 'industry', 'stock_name', 'url'], header=1, encoding='UTF-8')
-        # df_stocks_list = df_stocks_list[df_stocks_list['stock_name'] == 'Axis Bank']
+        df_stocks_list = df_stocks_list[df_stocks_list['stock_name'] == 'Axis Bank']
         for index, row in df_stocks_list.iterrows():
             try:
                 stock_ltp_dict = {}
