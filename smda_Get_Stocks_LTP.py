@@ -78,7 +78,7 @@ if __name__ == '__main__':
     # Create an in-memory buffer and write the CSV data into it
     sectors_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
     df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer, sep=',', names=['Sector', 'Market_cap(Cr)', 'PE_Ratio', 'Industries', 'Stocks', 'Sector_url'], header=0, encoding='UTF-8')
-    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == 'Banks']
+    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == Sector]
 
     stock_ltp_list = []; failed_stocks_list = []
     for index,row in df_all_sectors.iterrows():
@@ -87,7 +87,7 @@ if __name__ == '__main__':
         s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=sector_stocks_list_s3_key)
         sector_stocks_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
         df_stocks_list = pd.read_csv(filepath_or_buffer=sector_stocks_list_io_buffer, sep=',', names=['Sector', 'industry', 'stock_name', 'url'], header=1, encoding='UTF-8')
-        df_stocks_list = df_stocks_list[df_stocks_list['stock_name'] == 'Axis Bank']
+        # df_stocks_list = df_stocks_list[df_stocks_list['stock_name'] == 'Axis Bank']
         for index, row in df_stocks_list.iterrows():
             try:
                 stock_ltp_dict = {}
