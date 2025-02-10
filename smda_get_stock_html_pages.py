@@ -3,9 +3,12 @@ job_start_time = datetime.now()
 
 s3_client = get_s3_client()
 
-from awsglue.utils import getResolvedOptions
-args = getResolvedOptions(sys.argv, ['Sector'])
-Sector = args['Sector']
+try:
+    from awsglue.utils import getResolvedOptions
+    args = getResolvedOptions(sys.argv, ['Sector'])
+    Sector = args['Sector']
+except Exception as glue_lib_err:
+    Sector = 'Power'
 
 def get_html_file(stock_url, stock_name) -> None:
     print(f"Saving html file for {stock_name}, ", end="");log_time = datetime.now()
