@@ -21,12 +21,12 @@ df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer,
                              header=0,
                              encoding='UTF-8'
                              )
-
+df_all_sectors = df_all_sectors[df_all_sectors['Sector'].isin(['Power'])]
 df_all_sectors = df_all_sectors.sort_values(by=['Stocks'], ascending=[True]).reset_index()
 df_all_sectors['n_series'] = df_all_sectors.index // 10 + 1
 # print(df_all_sectors)
 
-# df_all_sectors = df_all_sectors[df_all_sectors['Sector'].isin(['Finance', 'Metals & Mining','Power'])]
+
 # df_all_sectors = df_all_sectors[df_all_sectors['Stocks'] < 100].reset_index()
 # df_all_sectors = df_all_sectors.head(6)
 # df_all_sectors = df_all_sectors[df_all_sectors['n_series'].isin([1, 2])]
@@ -38,9 +38,9 @@ for line in df_all_sectors['n_series'].unique():
     job_runs_list = []
     df = df_all_sectors[df_all_sectors['n_series'] == line]
     for index, row in df.iterrows():
-        job_run_args = {'--Sector': row['Sector']}; job_runs_dict = {}
+        Sector = row['Sector']; job_runs_dict = {}
         start_glue_job_resp = glue_client.start_job_run(JobName='smda-get-stocks-htmls',
-                                                        Arguments=job_run_args,
+                                                        Arguments={'--Sector': Sector},
                                                         Timeout=50,
                                                         MaxCapacity=0.0625,
                                                         ExecutionClass='STANDARD'

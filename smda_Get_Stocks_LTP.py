@@ -3,13 +3,14 @@ job_start_time = datetime.now()
 
 s3_client = get_s3_client()
 
-try:
-    from awsglue.utils import getResolvedOptions
-    args = getResolvedOptions(sys.argv, ['Sector'])
-    Sector = args['Sector']
-except:
-    print("Unable to import aws glue libraries")
+# try:
+#     from awsglue.utils import getResolvedOptions
+#     args = getResolvedOptions(sys.argv, ['Sector'])
+#     Sector = args['Sector']
+# except:
+#     print("Unable to import aws glue libraries")
 
+Sector = 'Power'
 def get_stock_ltp(Sector, stock_name, Industry) -> dict:
     stock_html_file_s3_key = f"data/stocks_html_files/{Sector}/{stock_name}.html"
     html_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=stock_html_file_s3_key)
