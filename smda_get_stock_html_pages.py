@@ -5,13 +5,6 @@ job_start_time = datetime.now()
 
 s3_client = get_s3_client()
 
-try:
-    from awsglue.utils import getResolvedOptions
-    args = getResolvedOptions(sys.argv, ['Sector'])
-    Sector = args['Sector']
-except Exception as glue_lib_err:
-    Sector = 'Power'
-
 def get_stocks_list(Sector) -> pd.DataFrame:
     Sector = Sector.replace(" ", "_")
     print(f"PUlling html files for {Sector} Sector.")
@@ -65,7 +58,6 @@ def get_stocks_html_files(Sector):
             print(f"Stocks failed during re-pull\ncount: {len(failed_stocks_list)}\nlist: {failed_stocks_list}")
 
 if __name__ == '__main__':
-
 
     get_stocks_html_files(Sector = 'Power')
 
