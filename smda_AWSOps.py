@@ -40,17 +40,6 @@ def get_glue_client():
             print("Authenticated Glue service using keys")
             return glue_client
 
-    # try:
-    #     glue_client = aws_session.client('glue')
-    #     print("Authenticated Glue service")
-    #     return glue_client
-    # except:
-    #     print("Authenticating with Keys")
-    #     glue_client = aws_session.client('glue', aws_access_key_id = access_key, aws_secret_access_key = secret_key)
-    #     return glue_client
-    #
-    # return glue_client
-
 if __name__ == '__main__':
     aws_session = boto3.Session(profile_name='smda-etl')
 

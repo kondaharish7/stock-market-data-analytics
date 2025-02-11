@@ -1,11 +1,9 @@
-import pandas as pd
-
 from smda_libraries import *
 job_start_time = datetime.now()
 
 s3_client = get_s3_client()
 
-def get_stocks_list(Sector) -> pd.DataFrame:
+def get_stocks_list_df(Sector) -> pd.DataFrame:
     Sector = Sector.replace(" ", "_")
     print(f"PUlling html files for {Sector} Sector.")
 
@@ -28,7 +26,7 @@ def get_html_file(stock_url, stock_name) -> None:
 
 def get_stocks_html_files(Sector):
     # Get Stocks list dataframe
-    df_stocks_list = get_stocks_list(Sector='Power')
+    df_stocks_list = get_stocks_list_df(Sector = Sector)
 
     # Get html files from web
     failed_stocks_list = []
