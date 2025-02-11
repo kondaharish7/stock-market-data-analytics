@@ -10,8 +10,8 @@ s3_client = get_s3_client()
 # except:
 #     print("Unable to import aws glue libraries")
 
-Sector = 'Power'
-def get_stock_ltp(Sector, stock_name, Industry) -> dict:
+def get_stock_price(Sector, stock_name, Industry) -> dict:
+    stock_ltp_dict = {}
     stock_html_file_s3_key = f"data/stocks_html_files/{Sector}/{stock_name}.html"
     html_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=stock_html_file_s3_key)
     html_content = html_file_resp['Body'].read().decode('utf-8')
@@ -43,7 +43,7 @@ def get_stock_ltp(Sector, stock_name, Industry) -> dict:
 
     return stock_ltp_dict
 
-def save_df_to_s3(stock_ltp_list) -> None:
+def save_df_to_s3(Sector, stock_ltp_list) -> None:
     print(f"Saving the file for {Sector} to S3")
     df_stocks_ltp = pd.DataFrame(stock_ltp_list)
     df_stocks_ltp['nse_change'] = df_stocks_ltp['nsechange'].str.split("\(").str[0]
@@ -70,44 +70,38 @@ def save_df_to_s3(stock_ltp_list) -> None:
 
     s3_client.put_object(Body=stocks_ltp_io_buffer_bytes, Bucket=aws_s3_bucket, Key=stocks_ltp_s3_key)
     s3_client.put_object(Body=stocks_ltp_io_buffer_bytes, Bucket=aws_s3_bucket, Key=stocks_ltp_s3_key_latest)
-    print(f"elapsed, {datetime.now() - log_time}")
+    # print(f"elapsed, {datetime.now() - log_time}")
+
+def get_stock_ltp(Sector) -> None:
+    stock_ltp_list = []; failed_stocks_list = []
+    Sector = Sector.replace(" ", "_")
+    sector_stocks_list_s3_key = "data/stocks_list/{}_stocks_list.csv".format(Sector)
+    s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=sector_stocks_list_s3_key)
+    sector_stocks_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
+    df_stocks_list = pd.read_csv(filepath_or_buffer=sector_stocks_list_io_buffer, sep=',', names=['Sector', 'industry', 'stock_name', 'url'], header=1, encoding='UTF-8')
+    # df_stocks_list = df_stocks_list[df_stocks_list['stock_name'] == 'Axis Bank']
+    for index, row in df_stocks_list.iterrows():
+        try:
+            Industry = row.loc['industry']; stock_name = row.loc['stock_name'].replace(" ", "_")
+            print(f"{str('--') * 10}\nPulling data for {stock_name}, ",end="");log_time = datetime.now()
+            stock_ltp_dict = get_stock_price(Sector=Sector, stock_name=stock_name, Industry=Industry)
+        except Exception as data_pull_err:
+            if data_pull_err.response['Error']['Code'] == 'NoSuchKey':
+                print(f"Html file for {stock_name} doesn't exists in the Bucket.")
+                failed_stocks_list.append(stock_name)
+                print(f", elapsed, {datetime.now() - log_time}")
+            else:
+                print(data_pull_err)
+        else:
+            stock_ltp_list.append(stock_ltp_dict)
+            print(f"elapsed, {datetime.now() - log_time}")
+    # print(stock_ltp_list)
+    save_df_to_s3(Sector=Sector, stock_ltp_list=stock_ltp_list)
 
 if __name__ == '__main__':
-    all_sectors_s3_key_latest = "data/all_sectors/latest/all_sectors.csv"
-    s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=all_sectors_s3_key_latest)
+    get_stock_ltp(Sector = 'Photographic Products')
 
-    # Create an in-memory buffer and write the CSV data into it
-    sectors_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
-    df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer, sep=',', names=['Sector', 'Market_cap(Cr)', 'PE_Ratio', 'Industries', 'Stocks', 'Sector_url'], header=0, encoding='UTF-8')
-    df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == Sector]
-
-    stock_ltp_list = []; failed_stocks_list = []
-    for index,row in df_all_sectors.iterrows():
-        Sector = row.loc['Sector'].replace(" ","_")
-        sector_stocks_list_s3_key = "data/stocks_list/{}_stocks_list.csv".format(Sector)
-        s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=sector_stocks_list_s3_key)
-        sector_stocks_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
-        df_stocks_list = pd.read_csv(filepath_or_buffer=sector_stocks_list_io_buffer, sep=',', names=['Sector', 'industry', 'stock_name', 'url'], header=1, encoding='UTF-8')
-        # df_stocks_list = df_stocks_list[df_stocks_list['stock_name'] == 'Axis Bank']
-        for index, row in df_stocks_list.iterrows():
-            try:
-                stock_ltp_dict = {}
-                Industry = row.loc['industry']; stock_name = row.loc['stock_name'].replace(" ", "_")
-                print(f"{str('--') * 10}\nPulling data for {stock_name}, ",end="");log_time = datetime.now()
-                stock_ltp_dict = get_stock_ltp(Sector=Sector, stock_name=stock_name, Industry=Industry)
-            except Exception as data_pull_err:
-                if data_pull_err.response['Error']['Code'] == 'NoSuchKey':
-                    print(f"Html file for {stock_name} doesn't exists in the Bucket.")
-                    failed_stocks_list.append(stock_name)
-                    print(f", elapsed, {datetime.now() - log_time}")
-            else:
-                stock_ltp_list.append(stock_ltp_dict)
-                print(f"elapsed, {datetime.now() - log_time}")
-
-    save_df_to_s3(stock_ltp_list = stock_ltp_list)
-
-
-    print(f"\n{str('--')*10}\n{job_start_time} | {datetime.now()} | {datetime.now() - job_start_time}")
+print(f"\n{str('--')*10}\n{job_start_time} | {datetime.now()} | {datetime.now() - job_start_time}")
 
 
 """
