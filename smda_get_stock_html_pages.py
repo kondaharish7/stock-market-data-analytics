@@ -5,7 +5,7 @@ s3_client = get_s3_client()
 
 def get_stocks_list_df(Sector) -> pd.DataFrame:
     Sector = Sector.replace(" ", "_")
-    print(f"PUlling html files for {Sector} Sector.")
+    print(f"Pulling html files for {Sector} Sector.")
 
     sector_stocks_list_s3_key = "data/stocks_list/{}_stocks_list.csv".format(Sector)
     s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=sector_stocks_list_s3_key)
@@ -13,9 +13,10 @@ def get_stocks_list_df(Sector) -> pd.DataFrame:
     # Create an in-memory buffer and write the CSV data into it
     sector_stocks_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
     df_stocks_list = pd.read_csv(filepath_or_buffer=sector_stocks_list_io_buffer, sep=',', names=['Sector', 'industry', 'stock_name', 'url'], header=1, encoding='UTF-8')
+    print(df_stocks_list)
     return df_stocks_list
 
-def get_html_file(stock_url, stock_name) -> None:
+def get_html_file(Sector, stock_url, stock_name) -> None:
     print(f"Saving html file for {stock_name}, ", end="");log_time = datetime.now()
     stock_url_response = requests.get(stock_url, timeout=2)
     stock_url_html_page = BeautifulSoup(stock_url_response.text, 'html.parser')
@@ -33,9 +34,10 @@ def get_stocks_html_files(Sector):
     for index, row in df_stocks_list.iterrows():
         try:
             stock_url = row.loc['url']; stock_name = row.loc['stock_name']
-            get_html_file(stock_url=stock_url, stock_name=stock_name)
+            get_html_file(Sector=Sector, stock_url=stock_url, stock_name=stock_name)
         except Exception as get_html_err:
             print(f"Timed Out.")
+            print(traceback.format_exc())
             failed_stocks_list.append([stock_url, stock_name])
         else:
             pass
@@ -57,7 +59,7 @@ def get_stocks_html_files(Sector):
 
 if __name__ == '__main__':
 
-    get_stocks_html_files(Sector = 'Power')
+    get_stocks_html_files(Sector = 'Banks')
 
 print(f"\n{str('--')*10}\n{job_start_time} | {datetime.now()} | {datetime.now() - job_start_time}")
 
