@@ -17,6 +17,7 @@ def get_stocks_list(Sector) -> None:
                                  encoding='UTF-8'
                                  )
     df_all_sectors = df_all_sectors[df_all_sectors['Sector'] == Sector]
+    # print(df_all_sectors)
 
     # Create a dataframe with all the stocks and their url's
     empty_stocks_list = []
@@ -64,7 +65,7 @@ def get_stocks_list(Sector) -> None:
     print(f"\n{str('--')*10}\n{job_start_time} | {datetime.now()} | {datetime.now() - job_start_time}")
 
 if __name__ == '__main__':
-    get_stocks_list(Sector='Photographic Products')
+    get_stocks_list(Sector='Oil & Gas')
 
 """
 Using Access keys and Secret keys
