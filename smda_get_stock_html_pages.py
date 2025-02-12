@@ -4,7 +4,7 @@ job_start_time = datetime.now()
 s3_client = get_s3_client()
 
 def get_stocks_list_df(Sector) -> pd.DataFrame:
-    Sector = Sector.replace(" ", "_")
+    # Sector = Sector.replace(" ", "_")
     print(f"Pulling html files for {Sector} Sector.")
 
     sector_stocks_list_s3_key = "data/stocks_list/{}_stocks_list.csv".format(Sector)
@@ -26,6 +26,7 @@ def get_html_file(Sector, stock_url, stock_name) -> None:
     print(f"elapsed: {datetime.now() - log_time}")
 
 def get_stocks_html_files(Sector):
+    Sector = Sector.replace(" ", "_")
     # Get Stocks list dataframe
     df_stocks_list = get_stocks_list_df(Sector = Sector)
 

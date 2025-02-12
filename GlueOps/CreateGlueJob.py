@@ -17,12 +17,12 @@ df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer,
                              encoding='UTF-8'
                              )
 
-# print(df_all_sectors)
+print()
 for index,row in df_all_sectors.iterrows():
-    Sector = row.loc['Sector']
+    Sector = row.loc['Sector'].replace(" ", "_")
     glue_job_name = "smda-workflow-sector-{}".format(Sector)
     iam_role = iam_gluejob_role
-    py_script_name = "smda_get_stock_html_pages.py"
+    py_script_name = "smda_Workflow.py"
     script_location = "s3://{}/py_code/{}".format(aws_s3_bucket, py_script_name)
     extra_py_files = "s3://python-libraries1/pythonlibraries/beautifulsoup4-4.12.2-py3-none-any.whl,s3://stock-market-data-analytics/py_code/smda_libraries.py,s3://stock-market-data-analytics/py_code/smda_contexts.py,s3://stock-market-data-analytics/py_code/smda_AWSOps.py,s3://stock-market-data-analytics/py_code/smda_get_stocks_list.py, s3://stock-market-data-analytics/py_code/smda_get_stock_html_pages.py, s3://stock-market-data-analytics/py_code/smda_Get_Stocks_LTP.py"
     temp_dir = "s3://stock-market-data-analytics/temp_path/"
@@ -32,7 +32,9 @@ for index,row in df_all_sectors.iterrows():
                                         Command={'Name': 'pythonshell', 'ScriptLocation': script_location, 'PythonVersion': '3.9'},
                                         DefaultArguments={'--Sector':Sector, '--extra-py-files': extra_py_files, '--enable-job-insights': 'false', '--enable-observability-metrics': 'false', '--enable-glue-datacatalog': 'true', 'library-set': 'analytics', '--job-language': 'python', '--TempDir': temp_dir},
                                         MaxCapacity=0.0625,
+                                        Timeout=30,
                                         GlueVersion='3.0',
                                         ExecutionClass='STANDARD'
                                     )
-    break # to limit to one loop
+    print(f"Job created: {response['Name']}")
+    # break # to limit to one loop
