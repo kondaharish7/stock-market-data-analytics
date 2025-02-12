@@ -50,7 +50,7 @@ def get_stocks_html_files(Sector):
         for stock_details in failed_stocks_list1:
             try:
                 stock_url = stock_details[0];stock_name = stock_details[1]
-                get_html_file(stock_url=stock_url, stock_name=stock_name)
+                get_html_file(Sector=Sector, stock_url=stock_url, stock_name=stock_name)
             except Exception as get_html_err:
                 print(f"Timed Out.")
                 failed_stocks_list.append([stock_url, stock_name])
