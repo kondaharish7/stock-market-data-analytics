@@ -19,8 +19,8 @@ df_all_sectors = pd.read_csv(filepath_or_buffer=sectors_list_io_buffer,
 
 print()
 for index,row in df_all_sectors.iterrows():
-    Sector = row.loc['Sector'].replace(" ", "_")
-    glue_job_name = "smda-workflow-sector-{}".format(Sector)
+    Sector = row.loc['Sector']
+    glue_job_name = "smda-workflow-sector-{}".format(Sector.replace(" ", "_"))
     iam_role = iam_gluejob_role
     py_script_name = "smda_Workflow.py"
     script_location = "s3://{}/py_code/{}".format(aws_s3_bucket, py_script_name)
@@ -34,7 +34,8 @@ for index,row in df_all_sectors.iterrows():
                                         MaxCapacity=0.0625,
                                         Timeout=30,
                                         GlueVersion='3.0',
-                                        ExecutionClass='STANDARD'
+                                        ExecutionClass='STANDARD',
+                                        Tags = {'smda': 'etl-job'}
                                     )
     print(f"Job created: {response['Name']}")
     # break # to limit to one loop
