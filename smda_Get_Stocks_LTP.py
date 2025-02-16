@@ -39,12 +39,12 @@ def get_stock_price(Sector, stock_name, Industry) -> dict:
 def save_df_to_s3(Sector, stock_ltp_list) -> None:
     print(f"Saving the file for {Sector} to S3")
     df_stocks_ltp = pd.DataFrame(stock_ltp_list)
-    # print(df_stocks_ltp)
+    print(df_stocks_ltp)
     df_stocks_ltp['bsecp'] = df_stocks_ltp['bsecp'].str.replace(',', '').astype(float)
     df_stocks_ltp['nsecp'] = df_stocks_ltp['nsecp'].str.replace(',', '').astype(float)
-    df_stocks_ltp['nse_change'] = df_stocks_ltp['nsechange'].str.split("\(").str[0]
+    df_stocks_ltp['nse_change'] = df_stocks_ltp['nsechange'].str.split("\(").str[0].str.replace(',', '').astype(float)
     df_stocks_ltp['nse_change_%'] = df_stocks_ltp['nsechange'].str.extract(r'\((-?\d+\.\d+)%').astype(float)
-    df_stocks_ltp['bse_change'] = df_stocks_ltp['bsechange'].str.split("\(").str[0]
+    df_stocks_ltp['bse_change'] = df_stocks_ltp['bsechange'].str.split("\(").str[0].str.replace(',', '').astype(float)
     df_stocks_ltp['bse_change_%'] = df_stocks_ltp['bsechange'].str.extract(r'\((-?\d+\.\d+)%').astype(float)
     df_stocks_ltp['bseasondate'] = pd.to_datetime(df_stocks_ltp['bseasondate'].str.strip(), format='%d %b, %Y')
     df_stocks_ltp['nseasondate'] = pd.to_datetime(df_stocks_ltp['nseasondate'].str.strip(), format='%d %b, %Y')
@@ -53,7 +53,7 @@ def save_df_to_s3(Sector, stock_ltp_list) -> None:
     df_stocks_ltp.columns = ['Sector', 'Industry', 'stock_name', 'nse_ltp_date', 'nse_ltp', 'nse_change', 'nse_change_%', 'bse_ltp_date', 'bse_ltp', 'bse_change', 'bse_change_%', 'etl_insert_dt']
     # print(df_stocks_ltp.groupby(['Sector']).aggregate({'Industry':'count'}));print()
     # print(df_stocks_ltp.groupby(['Sector','Industry']).aggregate({'stock_name': 'count'}))
-    # print(df_stocks_ltp)
+    print(df_stocks_ltp)
 
     # Create an in-memory buffer and write the CSV data into it
     stocks_ltp_io_buffer = io.StringIO()
@@ -75,7 +75,7 @@ def get_stock_ltp(Sector) -> None:
     s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=sector_stocks_list_s3_key)
     sector_stocks_list_io_buffer = io.StringIO(s3_file_resp['Body'].read().decode('utf-8'))
     df_stocks_list = pd.read_csv(filepath_or_buffer=sector_stocks_list_io_buffer, sep=',', names=['Sector', 'industry', 'stock_name', 'url'], header=1, encoding='UTF-8')
-    # df_stocks_list = df_stocks_list[df_stocks_list['stock_name'] == 'Manorama Industries']
+    # df_stocks_list = df_stocks_list[df_stocks_list['stock_name'] == 'Bombay_Oxygen_']
     for index, row in df_stocks_list.iterrows():
         try:
             Industry = row.loc['industry']; stock_name = row.loc['stock_name'].replace(" ", "_")
@@ -95,7 +95,7 @@ def get_stock_ltp(Sector) -> None:
     save_df_to_s3(Sector=Sector, stock_ltp_list=stock_ltp_list)
 
 if __name__ == '__main__':
-    get_stock_ltp(Sector = 'Agri')
+    get_stock_ltp(Sector = 'Real Estate')
 
 print(f"\n{str('--')*10}\n{job_start_time} | {datetime.now()} | {datetime.now() - job_start_time}")
 
