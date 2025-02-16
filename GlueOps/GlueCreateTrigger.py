@@ -14,9 +14,9 @@ for glue_job_name in glue_jobs_resp['JobNames']:
     args_list.append(args_dict)
 
 # Create trigger
-create_trig_resp = glue_client.create_trigger(Name='smda-workflow-trigger',
-                                            Type='SCHEDULED',
-                                            Schedule="cron(30 00 * * ? *)",
+create_trig_resp = glue_client.create_trigger(Name='smda-workflow-trigger-1',
+                                            Type='ON_DEMAND',
+                                            # Schedule="cron(30 00 * * ? *)",
                                             Actions= args_list,
                                             StartOnCreation=False,
                                             Tags = {'smda': 'etl-trigger'}
