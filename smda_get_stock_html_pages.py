@@ -7,6 +7,7 @@ def get_stocks_list_df(Sector) -> pd.DataFrame:
     # Sector = Sector.replace(" ", "_")
     print(f"Pulling html files for {Sector} Sector.")
 
+    print(f"pulling the Stocks list file from \"{Sector}_stocks_list.csv\" file")
     sector_stocks_list_s3_key = "data/stocks_list/{}_stocks_list.csv".format(Sector)
     s3_file_resp = s3_client.get_object(Bucket=aws_s3_bucket, Key=sector_stocks_list_s3_key)
 
@@ -18,7 +19,7 @@ def get_stocks_list_df(Sector) -> pd.DataFrame:
 
 def get_html_file(Sector, stock_url, stock_name) -> None:
     print(f"Saving html file for {stock_name}, ", end="");log_time = datetime.now()
-    stock_url_response = requests.get(stock_url, timeout=2)
+    stock_url_response = requests.get(stock_url, timeout=5)
     stock_url_html_page = BeautifulSoup(stock_url_response.text, 'html.parser')
     stocks_html_file_key = "data/stocks_html_files/{}/{}.html".format(Sector, stock_name.replace(" ", "_"))
     html_io_buffer = io.BytesIO(str(stock_url_html_page).encode('utf-8'))
@@ -27,6 +28,7 @@ def get_html_file(Sector, stock_url, stock_name) -> None:
 
 def get_stocks_html_files(Sector):
     Sector = Sector.replace(" ", "_")
+    print(f"Pulling the stocks for {Sector} Sector")
     # Get Stocks list dataframe
     df_stocks_list = get_stocks_list_df(Sector = Sector)
 

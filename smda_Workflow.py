@@ -1,3 +1,5 @@
+import sys
+
 from smda_libraries import *
 from smda_get_stocks_list import *
 from smda_get_stock_html_pages import *
@@ -9,7 +11,10 @@ try:
     args = getResolvedOptions(sys.argv, ['Sector'])
     Sector = args['Sector']
 except Exception as glue_lib_err:
-    Sector = 'Power'
+    try:
+        Sector = sys.argv[1]
+    except Exception as args_err:
+        Sector = 'Containers & Packaging'
 
 if __name__ == '__main__':
     # Sector = 'Photographic Products'
